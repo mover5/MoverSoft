@@ -28,10 +28,45 @@
             });
         }
 
-        public async Task<T> FindEntity<T>(string partitionKey, string rowKey) where T : TableRecord, new()
+        public async Task<T> Find<T>(string partitionKey, string rowKey) where T : TableRecord, new()
         {
-            var result = await this.Table.ExecuteAsync(TableOperation.Retrieve<DynamicTableEntity>(partitionKey, rowKey));
+            var result = await this.Table
+                .ExecuteAsync(TableOperation.Retrieve<DynamicTableEntity>(partitionKey, rowKey))
+                .ConfigureAwait(continueOnCapturedContext: false);
+
             return ((DynamicTableEntity)result.Result).ConvertDynamicEntityToTableRecord<T>();
+        }
+
+        public async Task<T[]> FindRange<T>(string partitionKey) where T : TableRecord, new()
+        {
+            var segmentedResult = await this
+                .FindRangeSegmented<T>(partitionKey: partitionKey)
+                .ConfigureAwait(continueOnCapturedContext: false);
+
+            return segmentedResult.Results;
+        }
+
+        public async Task<SegmentedResult<T>> FindRangeSegmented<T>(string partitionKey, TableContinuationToken token = null) where T : TableRecord, new()
+        {
+            var rangeQuery = new TableQuery()
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey));
+
+            var entitySegment = await this.Table
+                .ExecuteQuerySegmentedAsync(rangeQuery, token)
+                .ConfigureAwait(continueOnCapturedContext: false);
+
+            return new SegmentedResult<T>
+            {
+                ContinuationToken = entitySegment.ContinuationToken,
+                Results = entitySegment.Results != null
+                    ? entitySegment.Results.SelectArray(entity => entity.ConvertDynamicEntityToTableRecord<T>())
+                    : null
+            };
+        }
+
+        public Task DeleteEntity<T>(T record) where T : TableRecord, new()
+        {
+            return Table.ExecuteAsync(TableOperation.Delete(record.ConvertTableRecordToDynamicEntity()));
         }
 
         public async Task SaveEntity<T>(T record) where T : TableRecord, new()
@@ -39,6 +74,7 @@
             var batchOperation = new TableBatchOperation();
             var indexes = record.Indexes;
             var partitionKeys = indexes
+                .CoalesceEnumerable()
                 .SelectArray(index => index.PartitionKey)
                 .Distinct();
 
@@ -64,7 +100,9 @@
 
             if (batchOperation.Any())
             {
-                await this.Table.ExecuteBatchAsync(batch: batchOperation);
+                await this.Table
+                    .ExecuteBatchAsync(batch: batchOperation)
+                    .ConfigureAwait(continueOnCapturedContext: false);
             }
         }
     }

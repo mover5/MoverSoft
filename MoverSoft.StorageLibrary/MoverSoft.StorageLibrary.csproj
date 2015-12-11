@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Entities\RowAttribute.cs" />
+    <Compile Include="Entities\SegmentedResult.cs" />
     <Compile Include="Entities\TableRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tables\TableRecordUtilities.cs" />
