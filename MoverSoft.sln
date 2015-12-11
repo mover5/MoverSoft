@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoverSoft.StorageLibrary", "MoverSoft.StorageLibrary\MoverSoft.StorageLibrary.csproj", "{16936154-C2B0-4411-B167-00BEFAB67019}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoverSoft.Common", "MoverSoft.Common\MoverSoft.Common.csproj", "{86F141A6-594B-42B1-8CC4-F8C66F2A3CA2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{EBF1A0D8-57E5-4DEF-B735-B788E9F173A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoverSoft.StorageLibrary.Tests", "MoverSoft.StorageLibrary.Tests\MoverSoft.StorageLibrary.Tests.csproj", "{0E11AF72-22D0-4274-B686-95171CC73756}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{16936154-C2B0-4411-B167-00BEFAB67019}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16936154-C2B0-4411-B167-00BEFAB67019}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16936154-C2B0-4411-B167-00BEFAB67019}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16936154-C2B0-4411-B167-00BEFAB67019}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86F141A6-594B-42B1-8CC4-F8C66F2A3CA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86F141A6-594B-42B1-8CC4-F8C66F2A3CA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86F141A6-594B-42B1-8CC4-F8C66F2A3CA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86F141A6-594B-42B1-8CC4-F8C66F2A3CA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E11AF72-22D0-4274-B686-95171CC73756}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E11AF72-22D0-4274-B686-95171CC73756}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E11AF72-22D0-4274-B686-95171CC73756}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E11AF72-22D0-4274-B686-95171CC73756}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0E11AF72-22D0-4274-B686-95171CC73756} = {EBF1A0D8-57E5-4DEF-B735-B788E9F173A0}
+	EndGlobalSection
+EndGlobal
