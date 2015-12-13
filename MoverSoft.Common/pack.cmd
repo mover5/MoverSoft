@@ -1,0 +1,1 @@
+nuget pack MoverSoft.Common.csproj -IncludeReferencedProjects
