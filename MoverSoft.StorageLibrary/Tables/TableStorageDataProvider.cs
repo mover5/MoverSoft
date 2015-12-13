@@ -1,6 +1,7 @@
 ﻿namespace MoverSoft.StorageLibrary.Tables
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.WindowsAzure.Storage;
@@ -37,65 +38,140 @@
             return ((DynamicTableEntity)result.Result).ConvertDynamicEntityToTableRecord<T>();
         }
 
-        public async Task<T[]> FindRange<T>(string partitionKey) where T : TableRecord, new()
+        public async Task<T[]> FindRange<T>(string partitionKey, int? top = null) where T : TableRecord, new()
         {
             var segmentedResult = await this
-                .FindRangeSegmented<T>(partitionKey: partitionKey)
+                .FindRangeSegmented<T>(partitionKey: partitionKey, top: top)
                 .ConfigureAwait(continueOnCapturedContext: false);
 
             return segmentedResult.Results;
         }
 
-        public async Task<SegmentedResult<T>> FindRangeSegmented<T>(string partitionKey, TableContinuationToken token = null) where T : TableRecord, new()
+        public async Task<T[]> FindRange<T>(string partitionKey, string rowKeyPrefix, int? top = null) where T : TableRecord, new()
         {
-            var rangeQuery = new TableQuery()
-                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey));
+            var segmentedResult = await this
+                .FindRangeSegmented<T>(partitionKey: partitionKey, rowKeyPrefix: rowKeyPrefix, top: top)
+                .ConfigureAwait(continueOnCapturedContext: false);
+
+            return segmentedResult.Results;
+        }
+
+        public Task<SegmentedResult<T>> FindRangeSegmented<T>(string partitionKey, int? top = null, TableContinuationToken token = null) where T : TableRecord, new()
+        {
+            var partitionKeyQuery = TableStorageUtilities.GetPartitionKeyEqualFilter(partitionKey: partitionKey);
+
+            return this.FindRangeSegmentedInternal<T>(partitionKeyQuery, top, token);
+        }
+
+        public Task<SegmentedResult<T>> FindRangeSegmented<T>(string partitionKey, string rowKeyPrefix, int? top = null, TableContinuationToken token = null) where T : TableRecord, new()
+        {
+            var rowPrefixQuery = TableStorageUtilities.GetRowKeyPrefixRangeFilter(partitionKey, rowKeyPrefix);
+
+            return this.FindRangeSegmentedInternal<T>(rowPrefixQuery, top, token);
+        }
+
+        private async Task<SegmentedResult<T>> FindRangeSegmentedInternal<T>(string query, int? top = null, TableContinuationToken token = null) where T : TableRecord, new()
+        {
+            top = top.HasValue ? (int?)Math.Min(top.Value, TableStorageUtilities.MaxTableRecords) : null;
 
             var entitySegment = await this.Table
-                .ExecuteQuerySegmentedAsync(rangeQuery, token)
+                .ExecuteQuerySegmentedAsync(
+                    query: new TableQuery<DynamicTableEntity>().Where(query).Take(top),
+                    token: token)
                 .ConfigureAwait(continueOnCapturedContext: false);
 
             return new SegmentedResult<T>
             {
                 ContinuationToken = entitySegment.ContinuationToken,
-                Results = entitySegment.Results != null
-                    ? entitySegment.Results.SelectArray(entity => entity.ConvertDynamicEntityToTableRecord<T>())
-                    : null
+                Results = entitySegment.Results
+                    .CoalesceEnumerable()
+                    .SelectArray(entity => entity.ConvertDynamicEntityToTableRecord<T>())
             };
         }
 
-        public Task DeleteEntity<T>(T record) where T : TableRecord, new()
+        public Task DeleteEntity(TableRecord record)
         {
-            return Table.ExecuteAsync(TableOperation.Delete(record.ConvertTableRecordToDynamicEntity()));
+            return this
+                .SaveAndDeleteEntities(
+                    toSave: null,
+                    toDelete: record.AsArray());
         }
 
-        public async Task SaveEntity<T>(T record) where T : TableRecord, new()
+        public Task DeleteEntities(IEnumerable<TableRecord> records)
+        {
+            return this
+                .SaveAndDeleteEntities(
+                    toSave: null,
+                    toDelete: records);
+        }
+
+        public Task SaveEntity(TableRecord record)
+        {
+            return this
+                .SaveAndDeleteEntities(
+                    toSave: record.AsArray(),
+                    toDelete: null);
+        }
+
+        public Task SaveEntities(IEnumerable<TableRecord> records)
+        {
+            return this
+                .SaveAndDeleteEntities(
+                    toSave: records,
+                    toDelete: null);
+        }
+
+        public async Task SaveAndDeleteEntities(IEnumerable<TableRecord> toSave, IEnumerable<TableRecord> toDelete)
         {
             var batchOperation = new TableBatchOperation();
-            var indexes = record.Indexes;
-            var partitionKeys = indexes
+            var indexesToSave = toSave
                 .CoalesceEnumerable()
-                .SelectArray(index => index.PartitionKey)
-                .Distinct();
+                .SelectManyArray(value => value.Indexes);
 
-            if (partitionKeys.Count() != 1)
+            var indexesToDelete = toDelete
+                .CoalesceEnumerable()
+                .SelectManyArray(value => value.Indexes);
+
+            var allIndexes = indexesToSave.Concat(indexesToDelete);
+            if (allIndexes.Count() > TableStorageUtilities.MaxBatchRecords)
             {
-                throw new ArgumentException("All index partition keys must match");
+                throw new ArgumentException(string.Format("Too many batch indexes. Index count: {0}. Max Indexes: {1}", allIndexes.Count(), TableStorageUtilities.MaxBatchRecords));
             }
 
-            foreach (var index in indexes)
+            var partitionKeys = allIndexes.Select(record => record.PartitionKey).DistinctArray();
+            if (partitionKeys.Count() != 1)
             {
-                if (string.IsNullOrEmpty(index.PartitionKey))
+                throw new ArgumentException("All entities must belong to the same partition key");
+            }
+
+            foreach (var indexToSave in indexesToSave)
+            {
+                if (string.IsNullOrEmpty(indexToSave.PartitionKey))
                 {
                     throw new ArgumentException("Partition key must not be null or empty");
                 }
 
-                if (string.IsNullOrEmpty(index.RowKey))
+                if (string.IsNullOrEmpty(indexToSave.RowKey))
                 {
                     throw new ArgumentException("Row key must not be null or empty");
                 }
 
-                batchOperation.InsertOrReplace(index.ConvertTableRecordToDynamicEntity());
+                batchOperation.InsertOrReplace(indexToSave.ConvertTableRecordToDynamicEntity());
+            }
+
+            foreach (var indexToDelete in indexesToDelete)
+            {
+                if (string.IsNullOrEmpty(indexToDelete.PartitionKey))
+                {
+                    throw new ArgumentException("Partition key must not be null or empty");
+                }
+
+                if (string.IsNullOrEmpty(indexToDelete.RowKey))
+                {
+                    throw new ArgumentException("Row key must not be null or empty");
+                }
+
+                batchOperation.Delete(indexToDelete.ConvertTableRecordToDynamicEntity());
             }
 
             if (batchOperation.Any())

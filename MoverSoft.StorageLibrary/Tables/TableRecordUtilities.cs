@@ -32,6 +32,8 @@
                 }
             }
 
+            tableRecord.EntityTag = entity.ETag;
+
             return tableRecord;
         }
 
@@ -40,6 +42,8 @@
             var entity = new DynamicTableEntity(
                 partitionKey: tableRecord.PartitionKey,
                 rowKey: tableRecord.RowKey);
+
+            entity.ETag = tableRecord.EntityTag ?? "*";
 
             var thisType = tableRecord.GetType();
             foreach (var property in thisType.GetProperties())

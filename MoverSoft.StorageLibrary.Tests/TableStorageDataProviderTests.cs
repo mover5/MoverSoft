@@ -5,9 +5,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using MoverSoft.Common.Extensions;
-using MoverSoft.StorageLibrary.Entities;
 using MoverSoft.StorageLibrary.Tables;
-using Newtonsoft.Json;
+using MoverSoft.StorageLibrary.Tests.TestEntities;
 
 namespace MoverSoft.StorageLibrary.Tests
 {
@@ -58,65 +57,174 @@ namespace MoverSoft.StorageLibrary.Tests
             Assert.AreEqual(rawStorageObject.ArrayTest.ToJson(), entities.First()["ArrayTest"].StringValue);
         }
 
-        internal enum StorageEnum
+        [TestMethod]
+        public async Task SaveIndexesObjectIntoTable()
         {
-            Value1,
-            Value2,
-            Value3
+            var tableName = "testtableindex";
+            var provider = new TableStorageDataProvider(this.ConnectionString, tableName);
+            var indexedObject = new IndexedObject
+            {
+                Address = "Address 1",
+                Name = "Name 1",
+                TenantId = Guid.NewGuid().ToString()
+            };
+
+            await provider.SaveEntity(indexedObject);
+
+            var storageAccount = CloudStorageAccount.Parse(connectionString: this.ConnectionString);
+            var tableClient = storageAccount.CreateCloudTableClient();
+            var table = tableClient.GetTableReference(tableName: tableName);
+            var query = new TableQuery().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, indexedObject.PartitionKey));
+            var entities = table.ExecuteQuery(query);
+            Assert.AreEqual(2, entities.Count());
+            var entityIndex1 = entities.First(item => item.RowKey == IndexedObject.NameIndex.GetRowKey("Name 1"));
+            var entityIndex2 = entities.First(item => item.RowKey == IndexedObject.AddressIndex.GetRowKey("Address 1", "Name 1"));
+            Assert.IsNotNull(entityIndex1);
+            Assert.IsNotNull(entityIndex2);
         }
 
-        internal class JsonClass
+        [TestMethod]
+        public async Task FindEntity()
         {
-            [JsonProperty]
-            public string TestString { get; set; }
+            var tableName = "findentity";
+            var provider = new TableStorageDataProvider(this.ConnectionString, tableName);
+            var partitionKey = Guid.NewGuid().ToString();
+            var entities = Enumerable.Range(0, 10)
+                .SelectArray(i =>
+                {
+                    return new IndexedObject
+                    {
+                        Address = (i % 2).ToString(),
+                        Name = i.ToString(),
+                        TenantId = partitionKey
+                    };
+                });
 
-            [JsonProperty]
-            public int TestInt { get; set; }
+            await provider.SaveEntities(entities);
 
-            [JsonProperty]
-            public StorageEnum TestEnum { get; set; }
+            var name6 = await provider.Find<IndexedObject>(partitionKey, IndexedObject.NameIndex.GetRowKey("6"));
+            Assert.IsNotNull(name6);
+            Assert.AreEqual(partitionKey, name6.PartitionKey);
+            Assert.AreEqual("0", name6.Address);
+            Assert.AreEqual("6", name6.Name);
+
+            var doesntExist = await provider.Find<IndexedObject>(partitionKey, "DoesntExist");
+            Assert.IsNull(doesntExist);
+
+            var missingPartitionKey = await provider.Find<IndexedObject>("NoPartitionKey", IndexedObject.NameIndex.GetRowKey("6"));
+            Assert.IsNull(missingPartitionKey);
         }
 
-        internal class StorageObject : TableRecord
+        [TestMethod]
+        public async Task FindEntitiesInPartition()
         {
-            [Row]
-            public JsonClass ClassTest { get; set; }
-
-            [Row]
-            public string TenantId { get; set; }
-
-            [Row]
-            public string ObjectId { get; set; }
-
-            [Row]
-            public string Name { get; set; }
-
-            [Row]
-            public int Count { get; set; }
-
-            [Row]
-            public StorageEnum EnumValue { get; set; }
-
-            [Row]
-            public string[] ArrayTest { get; set; }
-
-            public string NotSaved { get; set; }
-
-            public override string PartitionKey
-            {
-                get
+            var tableName = "findentity";
+            var provider = new TableStorageDataProvider(this.ConnectionString, tableName);
+            var partitionKey1 = Guid.NewGuid().ToString();
+            var partitionKey2 = Guid.NewGuid().ToString();
+            var entities1 = Enumerable.Range(0, 10)
+                .SelectArray(i =>
                 {
-                    return this.TenantId;
-                }
-            }
+                    return new StorageObject
+                    {
+                        Name = i.ToString(),
+                        ObjectId = Guid.NewGuid().ToString(),
+                        TenantId = partitionKey1
+                    };
+                });
 
-            public override string RowKey
-            {
-                get
+            var entities2 = Enumerable.Range(0, 8)
+                .SelectArray(i =>
                 {
-                    return this.ObjectId;
-                }
-            }
+                    return new StorageObject
+                    {
+                        Name = i.ToString(),
+                        ObjectId = Guid.NewGuid().ToString(),
+                        TenantId = partitionKey2
+                    };
+                });
+
+            await provider.SaveEntities(entities1);
+            await provider.SaveEntities(entities2);
+
+            var part1Collection = await provider.FindRange<StorageObject>(partitionKey1);
+            Assert.IsNotNull(part1Collection);
+            Assert.AreEqual(10, part1Collection.Count());
+
+            var part2Collection = await provider.FindRange<StorageObject>(partitionKey2);
+            Assert.IsNotNull(part2Collection);
+            Assert.AreEqual(8, part2Collection.Count());
+
+            var toppedCollection = await provider.FindRange<StorageObject>(partitionKey1, 4);
+            Assert.AreEqual(4, toppedCollection.Count());
+
+            var emptyCollection = await provider.FindRange<StorageObject>("Test");
+            Assert.AreEqual(0, emptyCollection.Count());
+        }
+
+        [TestMethod]
+        public async Task DeleteRecords()
+        {
+            var tableName = "deletetable";
+            var provider = new TableStorageDataProvider(this.ConnectionString, tableName);
+            var partitionKey = Guid.NewGuid().ToString();
+
+            var entities = Enumerable.Range(0, 10)
+                .SelectArray(i =>
+                {
+                    return new IndexedObject
+                    {
+                        Address = (i % 2).ToString(),
+                        Name = i.ToString(),
+                        TenantId = partitionKey
+                    };
+                });
+
+            await provider.SaveEntities(entities);
+            var ensureOriginalResult = await provider.FindRange<IndexedObject>(partitionKey);
+            Assert.AreEqual(20, ensureOriginalResult.Count());
+
+            await provider.DeleteEntity(entities[4]);
+            var deletedCollection = await provider.FindRange<IndexedObject>(partitionKey);
+            Assert.AreEqual(18, deletedCollection.Count());
+            var deletedEntity = await provider.Find<IndexedObject>(entities[4].PartitionKey, entities[4].Indexes[0].RowKey);
+            Assert.IsNull(deletedEntity);
+        }
+
+        [TestMethod]
+        public async Task FindByPrefix()
+        {
+            var tableName = "findentity";
+            var provider = new TableStorageDataProvider(this.ConnectionString, tableName);
+            var partitionKey = Guid.NewGuid().ToString();
+            var entities = Enumerable.Range(0, 10)
+                .SelectArray(i =>
+                {
+                    return new IndexedObject
+                    {
+                        Address = (i % 2).ToString(),
+                        Name = i.ToString(),
+                        TenantId = partitionKey
+                    };
+                });
+
+            await provider.SaveEntities(entities);
+
+            var addressZeroPrefix = await provider.FindRange<IndexedObject>(partitionKey, IndexedObject.AddressIndex.GetRowKeyPrefix("0"));
+            Assert.AreEqual(5, addressZeroPrefix.Count());
+
+            var addressZeroPrefixWithTop = await provider.FindRange<IndexedObject>(partitionKey, IndexedObject.AddressIndex.GetRowKeyPrefix("0"), 2);
+            Assert.AreEqual(2, addressZeroPrefixWithTop.Count());
+
+            var addressZeroSegmented = await provider.FindRangeSegmented<IndexedObject>(partitionKey, IndexedObject.AddressIndex.GetRowKeyPrefix("0"), 3);
+            Assert.IsNotNull(addressZeroSegmented);
+            Assert.AreEqual(3, addressZeroSegmented.Results.Count());
+            Assert.IsNotNull(addressZeroSegmented.ContinuationToken);
+
+            var addressZeroNextSegment = await provider.FindRangeSegmented<IndexedObject>(partitionKey, IndexedObject.AddressIndex.GetRowKeyPrefix("0"), 3, addressZeroSegmented.ContinuationToken);
+            Assert.IsNotNull(addressZeroNextSegment);
+            Assert.AreEqual(2, addressZeroNextSegment.Results.Count());
+            Assert.IsNull(addressZeroNextSegment.ContinuationToken);
         }
     }
 }

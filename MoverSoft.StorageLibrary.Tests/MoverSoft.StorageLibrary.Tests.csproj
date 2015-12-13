@@ -83,6 +83,10 @@
   <ItemGroup>
     <Compile Include="TableStorageDataProviderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestEntities\IndexedObject.cs" />
+    <Compile Include="TestEntities\StorageEnum.cs" />
+    <Compile Include="TestEntities\JsonClass.cs" />
+    <Compile Include="TestEntities\StorageObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MoverSoft.Common\MoverSoft.Common.csproj">

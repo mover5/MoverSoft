@@ -20,5 +20,20 @@
         {
             return source.Select(selector).ToArray();
         }
+
+        public static TResult[] SelectManyArray<T, TResult>(this IEnumerable<T> source, Func<T, TResult[]> selector)
+        {
+            return source.SelectMany(selector).ToArray();
+        }
+
+        public static IEnumerable<T> DistinctArray<T>(this IEnumerable<T> source)
+        {
+            return source.Distinct().ToArray();
+        }
+
+        public static IEnumerable<T> DistinctArray<T>(this IEnumerable<T> source, IEqualityComparer<T> comparer)
+        {
+            return source.Distinct(comparer).ToArray();
+        }
     }
 }

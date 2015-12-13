@@ -72,6 +72,7 @@
     <Compile Include="Entities\SegmentedResult.cs" />
     <Compile Include="Entities\TableRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tables\TableStorageUtilities.cs" />
     <Compile Include="Tables\TableRecordUtilities.cs" />
     <Compile Include="Tables\TableStorageDataProvider.cs" />
   </ItemGroup>
