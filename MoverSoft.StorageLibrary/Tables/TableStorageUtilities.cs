@@ -35,6 +35,14 @@ namespace MoverSoft.StorageLibrary.Tables
             return TableQuery.CombineFilters(left, TableOperators.And, right);
         }
 
+        public static string GetRowKeyQueryComparisonRangeFilter(string partitionKey, string rowKey, string comparison)
+        {
+            var partitionKeyQuery = TableStorageUtilities.GetPartitionKeyEqualFilter(partitionKey);
+            var rowKeyQuery = TableQuery.GenerateFilterCondition(TableStorageUtilities.RowKey, comparison, rowKey);
+
+            return TableQuery.CombineFilters(partitionKeyQuery, TableOperators.And, rowKeyQuery);
+        }
+
         public static string GetRowKeyRangeFilter(string rowKeyStart, string rowKeyEnd)
         {
             var left = TableQuery.GenerateFilterCondition(TableStorageUtilities.RowKey, QueryComparisons.GreaterThanOrEqual, rowKeyStart);
@@ -88,6 +96,11 @@ namespace MoverSoft.StorageLibrary.Tables
             }
 
             return escapedStorageKey.ToString();
+        }
+
+        public static string EscapeGuidStorageKey(string storageKey)
+        {
+            return TableStorageUtilities.EscapeStorageKey(storageKey.Replace("-", string.Empty).ToUpperInvariant());
         }
 
         private static string EscapeStorageCharacter(char character)

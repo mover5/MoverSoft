@@ -86,6 +86,7 @@
     <Compile Include="TestEntities\IndexedObject.cs" />
     <Compile Include="TestEntities\StorageEnum.cs" />
     <Compile Include="TestEntities\JsonClass.cs" />
+    <Compile Include="TestEntities\DateTimeObject.cs" />
     <Compile Include="TestEntities\StorageObject.cs" />
   </ItemGroup>
   <ItemGroup>

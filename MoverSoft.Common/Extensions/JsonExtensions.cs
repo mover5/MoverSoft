@@ -4,6 +4,7 @@ namespace MoverSoft.Common.Extensions
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.Net.Http.Formatting;
     using System.Xml;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
@@ -22,6 +23,27 @@ namespace MoverSoft.Common.Extensions
             DateTimeZoneHandling = DateTimeZoneHandling.Utc,
 
             NullValueHandling = NullValueHandling.Ignore,
+
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+
+            Converters = new List<JsonConverter>
+            {
+                new TimeSpanConverter(),
+                new StringEnumConverter { CamelCaseText = false },
+                new AdjustToUniversalIsoDateTimeConverter(),
+            },
+        };
+
+        public static readonly JsonSerializerSettings MediaJsonSerializationSettings = new JsonSerializerSettings
+        {
+            MaxDepth = JsonExtensions.JsonSerializationMaxDepth,
+            TypeNameHandling = TypeNameHandling.None,
+
+            DateParseHandling = DateParseHandling.None,
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+
+            NullValueHandling = NullValueHandling.Ignore,
+            MissingMemberHandling = MissingMemberHandling.Error,
 
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
 

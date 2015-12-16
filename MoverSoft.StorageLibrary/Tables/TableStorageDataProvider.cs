@@ -56,6 +56,69 @@
             return segmentedResult.Results;
         }
 
+        public async Task<T[]> FindRangeLessThan<T>(string partitionKey, string rowKey, int? top = null) where T : TableRecord, new()
+        {
+            var segmentedResult = await this
+                .FindRangeLessThanSegmented<T>(partitionKey: partitionKey, rowKey: rowKey, top: top)
+                .ConfigureAwait(continueOnCapturedContext: false);
+
+            return segmentedResult.Results;
+        }
+
+        public async Task<T[]> FindRangeLessThanOrEqual<T>(string partitionKey, string rowKey, int? top = null) where T : TableRecord, new()
+        {
+            var segmentedResult = await this
+                .FindRangeLessThanOrEqualSegmented<T>(partitionKey: partitionKey, rowKey: rowKey, top: top)
+                .ConfigureAwait(continueOnCapturedContext: false);
+
+            return segmentedResult.Results;
+        }
+
+        public async Task<T[]> FindRangeGreaterThan<T>(string partitionKey, string rowKey, int? top = null) where T : TableRecord, new()
+        {
+            var segmentedResult = await this
+                .FindRangeGreaterThanSegmented<T>(partitionKey: partitionKey, rowKey: rowKey, top: top)
+                .ConfigureAwait(continueOnCapturedContext: false);
+
+            return segmentedResult.Results;
+        }
+
+        public async Task<T[]> FindRangeGreaterThanOrEqual<T>(string partitionKey, string rowKey, int? top = null) where T : TableRecord, new()
+        {
+            var segmentedResult = await this
+                .FindRangeGreaterThanOrEqualSegmented<T>(partitionKey: partitionKey, rowKey: rowKey, top: top)
+                .ConfigureAwait(continueOnCapturedContext: false);
+
+            return segmentedResult.Results;
+        }
+
+        public Task<SegmentedResult<T>> FindRangeLessThanSegmented<T>(string partitionKey, string rowKey, int? top = null, TableContinuationToken token = null) where T : TableRecord, new()
+        {
+            var query = TableStorageUtilities.GetRowKeyQueryComparisonRangeFilter(partitionKey, rowKey, QueryComparisons.LessThan);
+
+            return this.FindRangeSegmentedInternal<T>(query, top, token);
+        }
+
+        public Task<SegmentedResult<T>> FindRangeLessThanOrEqualSegmented<T>(string partitionKey, string rowKey, int? top = null, TableContinuationToken token = null) where T : TableRecord, new()
+        {
+            var query = TableStorageUtilities.GetRowKeyQueryComparisonRangeFilter(partitionKey, rowKey, QueryComparisons.LessThanOrEqual);
+
+            return this.FindRangeSegmentedInternal<T>(query, top, token);
+        }
+        public Task<SegmentedResult<T>> FindRangeGreaterThanSegmented<T>(string partitionKey, string rowKey, int? top = null, TableContinuationToken token = null) where T : TableRecord, new()
+        {
+            var query = TableStorageUtilities.GetRowKeyQueryComparisonRangeFilter(partitionKey, rowKey, QueryComparisons.GreaterThan);
+
+            return this.FindRangeSegmentedInternal<T>(query, top, token);
+        }
+
+        public Task<SegmentedResult<T>> FindRangeGreaterThanOrEqualSegmented<T>(string partitionKey, string rowKey, int? top = null, TableContinuationToken token = null) where T : TableRecord, new()
+        {
+            var query = TableStorageUtilities.GetRowKeyQueryComparisonRangeFilter(partitionKey, rowKey, QueryComparisons.GreaterThanOrEqual);
+
+            return this.FindRangeSegmentedInternal<T>(query, top, token);
+        }
+
         public Task<SegmentedResult<T>> FindRangeSegmented<T>(string partitionKey, int? top = null, TableContinuationToken token = null) where T : TableRecord, new()
         {
             var partitionKeyQuery = TableStorageUtilities.GetPartitionKeyEqualFilter(partitionKey: partitionKey);

@@ -226,5 +226,51 @@ namespace MoverSoft.StorageLibrary.Tests
             Assert.AreEqual(2, addressZeroNextSegment.Results.Count());
             Assert.IsNull(addressZeroNextSegment.ContinuationToken);
         }
+
+        [TestMethod]
+        public async Task FindBySorted()
+        {
+            var tablename = "sorteddates";
+            var provider = new TableStorageDataProvider(this.ConnectionString, tablename);
+            var tenantId = Guid.NewGuid().ToString();
+            var today = DateTime.UtcNow;
+
+            var entities = Enumerable.Range(0, 10)
+                .SelectArray(i =>
+                {
+                    return new DateTimeObject
+                    {
+                        TenantId = tenantId,
+                        ObjectId = Guid.NewGuid().ToString(),
+                        TheTime = today.AddDays(i)
+                    };
+                });
+
+            await provider.SaveEntities(entities);
+
+            var zeroEntities = await provider.FindRangeGreaterThanOrEqual<DateTimeObject>(tenantId, today.AddDays(12).ToSortableDateTimeString());
+            Assert.AreEqual(0, zeroEntities.Count());
+
+            var halfEntities = await provider.FindRangeGreaterThanOrEqual<DateTimeObject>(tenantId, today.AddDays(5).ToSortableDateTimeString());
+            Assert.AreEqual(5, halfEntities.Count());
+
+            zeroEntities = await provider.FindRangeGreaterThan<DateTimeObject>(tenantId, today.AddDays(9).ToSortableDateTimeString());
+            Assert.AreEqual(0, zeroEntities.Count());
+
+            halfEntities = await provider.FindRangeGreaterThan<DateTimeObject>(tenantId, today.AddDays(4).ToSortableDateTimeString());
+            Assert.AreEqual(5, halfEntities.Count());
+
+            zeroEntities = await provider.FindRangeLessThanOrEqual<DateTimeObject>(tenantId, today.AddDays(-1).ToSortableDateTimeString());
+            Assert.AreEqual(0, zeroEntities.Count());
+
+            halfEntities = await provider.FindRangeLessThanOrEqual<DateTimeObject>(tenantId, today.AddDays(4).ToSortableDateTimeString());
+            Assert.AreEqual(5, halfEntities.Count());
+
+            zeroEntities = await provider.FindRangeLessThan<DateTimeObject>(tenantId, today.AddDays(0).ToSortableDateTimeString());
+            Assert.AreEqual(0, zeroEntities.Count());
+
+            halfEntities = await provider.FindRangeLessThan<DateTimeObject>(tenantId, today.AddDays(5).ToSortableDateTimeString());
+            Assert.AreEqual(5, halfEntities.Count());
+        }
     }
 }
