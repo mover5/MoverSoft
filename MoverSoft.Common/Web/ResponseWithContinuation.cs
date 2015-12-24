@@ -10,7 +10,7 @@ namespace MoverSoft.Common.Web
     public class ResponseWithContinuation<T>
     {
         [JsonProperty]
-        public T[] Value { get; set; }
+        public T Value { get; set; }
 
         [JsonProperty]
         public string NextLink { get; set; }

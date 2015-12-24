@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -11,25 +12,31 @@ namespace MoverSoft.Common.Web
 {
     public static class HttpRequestMessageExtensions
     {
-        public static HttpResponseMessage CreateResponse<T>(this HttpRequestMessage message, HttpStatusCode statusCode, IEnumerable<T> value, string continuationToken = null, HttpConfiguration configuration = null)
+        public static HttpResponseMessage CreateResponse<T>(
+            this HttpRequestMessage request,
+            HttpStatusCode statusCode,
+            T value,
+            HttpConfiguration configuration,
+            string encodedContinuationToken) where T : IEnumerable
         {
-            string nextLink = null;
-            if (!string.IsNullOrEmpty(continuationToken))
+            ResponseWithContinuation<T> responseWithContinuation = new ResponseWithContinuation<T>
             {
-                var endpoint = message.Headers.Referrer ?? new Uri(message.RequestUri.GetLeftPart(UriPartial.Authority));
-                var relativeUri = message.RequestUri.PathAndQuery;
-                var seperator = relativeUri.Contains("?") ? "&" : "?";
-                relativeUri = string.Format("{0}{1}$skipToken={2}", relativeUri, seperator, continuationToken);
-                nextLink = new Uri(endpoint, relativeUri).AbsoluteUri;
-            }
-
-            var responseWithContinuation = new ResponseWithContinuation<T>
-            {
-                Value = value.ToArray(),
-                NextLink = nextLink
+                Value = value,
             };
 
-            return message.CreateResponse(
+            if (!string.IsNullOrWhiteSpace(encodedContinuationToken))
+            {
+                var queryParams = request.RequestUri.ParseQueryString();
+                queryParams["$skiptoken"] = encodedContinuationToken;
+
+                var nextLinkBuilder = new UriBuilder(request.Headers.Referrer ?? request.RequestUri);
+
+                nextLinkBuilder.Query = queryParams.ToString();
+
+                responseWithContinuation.NextLink = nextLinkBuilder.Uri.AbsoluteUri;
+            }
+
+            return request.CreateResponse(
                 statusCode: statusCode,
                 value: responseWithContinuation,
                 configuration: configuration);

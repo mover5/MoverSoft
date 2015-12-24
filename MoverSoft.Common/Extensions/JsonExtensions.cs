@@ -8,6 +8,7 @@ namespace MoverSoft.Common.Extensions
     using System.Xml;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
+    using Newtonsoft.Json.Linq;
     using Newtonsoft.Json.Serialization;
 
     public static class JsonExtensions
@@ -34,7 +35,7 @@ namespace MoverSoft.Common.Extensions
             },
         };
 
-        public static readonly JsonSerializerSettings MediaJsonSerializationSettings = new JsonSerializerSettings
+        public static readonly JsonSerializerSettings MediaTypeFormatterSettings = new JsonSerializerSettings
         {
             MaxDepth = JsonExtensions.JsonSerializationMaxDepth,
             TypeNameHandling = TypeNameHandling.None,
@@ -55,6 +56,18 @@ namespace MoverSoft.Common.Extensions
             },
         };
 
+        public static readonly JsonSerializer JsonObjectTypeSerializer = JsonSerializer.Create(JsonExtensions.ObjectSerializationSettings);
+
+        public static readonly JsonSerializer JsonMediaTypeSerializer = JsonSerializer.Create(JsonExtensions.MediaTypeFormatterSettings);
+
+        public static readonly MediaTypeFormatter JsonObjectTypeFormatter = new JsonMediaTypeFormatter { SerializerSettings = JsonExtensions.ObjectSerializationSettings, UseDataContractJsonSerializer = false };
+
+        public static readonly MediaTypeFormatter[] JsonObjectTypeFormatters = new MediaTypeFormatter[] { JsonExtensions.JsonObjectTypeFormatter };
+
+        public static readonly MediaTypeFormatter JsonMediaTypeFormatter = new JsonMediaTypeFormatter { SerializerSettings = JsonExtensions.MediaTypeFormatterSettings, UseDataContractJsonSerializer = false };
+
+        public static readonly MediaTypeFormatter[] JsonMediaTypeFormatters = new MediaTypeFormatter[] { JsonExtensions.JsonMediaTypeFormatter };
+
         public static string ToJson(this object obj)
         {
             return JsonConvert.SerializeObject(obj, JsonExtensions.ObjectSerializationSettings);
@@ -65,9 +78,45 @@ namespace MoverSoft.Common.Extensions
             return JsonConvert.DeserializeObject<T>(json, JsonExtensions.ObjectSerializationSettings);
         }
 
+        public static T FromJson<T>(this string json, JsonSerializerSettings settings)
+        {
+            return JsonConvert.DeserializeObject<T>(json, settings);
+        }
+
         public static object FromJson(this string json, Type type)
         {
             return JsonConvert.DeserializeObject(json, type, JsonExtensions.ObjectSerializationSettings);
+        }
+
+        public static JToken ToJToken(this object obj)
+        {
+            return JToken.FromObject(obj, JsonExtensions.JsonObjectTypeSerializer);
+        }
+
+        public static T FromJToken<T>(this JToken jtoken)
+        {
+            return jtoken.ToObject<T>(JsonExtensions.JsonObjectTypeSerializer);
+        }
+
+        public static object FromJToken(this JToken jtoken, Type type)
+        {
+            return jtoken.ToObject(type, JsonExtensions.JsonObjectTypeSerializer);
+        }
+
+        public static JToken GetProperty(this JToken entity, string propertyName)
+        {
+            JToken value;
+
+            JObject container = entity as JObject;
+            return container != null && container.TryGetValue(propertyName, StringComparison.InvariantCultureIgnoreCase, out value)
+                ? value
+                : null;
+        }
+
+        public static T GetProperty<T>(this JToken entity, string propertyName)
+        {
+            var targetProperty = entity.GetProperty(propertyName);
+            return targetProperty != null ? targetProperty.FromJToken<T>() : default(T);
         }
 
         internal class TimeSpanConverter : JsonConverter
