@@ -72,5 +72,15 @@ namespace MoverSoft.Common.Extensions
         {
             return string.Join(separator, strings);
         }
+
+        public static string[] SplitRemoveEmpty(this string source, params char[] seperator)
+        {
+            return source.Split(seperator, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        public static string[] SplitRemoveEmpty(this string source, params string[] seperator)
+        {
+            return source.Split(seperator, StringSplitOptions.RemoveEmptyEntries);
+        }
     }
 }
