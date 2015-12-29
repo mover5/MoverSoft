@@ -19,6 +19,13 @@ namespace MoverSoft.StorageLibrary.Tables
 
         public const int MaxBatchRecords = 100;
 
+        public static string GetRowKeyQuery(string partitionKey, string rowKeyQuery)
+        {
+            var partitionKeyEqualsFilter = TableStorageUtilities.GetPartitionKeyEqualFilter(partitionKey);
+
+            return TableQuery.CombineFilters(partitionKeyEqualsFilter, TableOperators.And, rowKeyQuery);
+        }
+
         public static string GetRowKeyPrefixRangeFilter(string partitionKey, string rowKeyPrefix)
         {
             var partitionKeyEqualsFilter = TableStorageUtilities.GetPartitionKeyEqualFilter(partitionKey);

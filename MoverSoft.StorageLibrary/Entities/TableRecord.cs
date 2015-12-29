@@ -4,7 +4,7 @@ namespace MoverSoft.StorageLibrary.Entities
     using System;
     using System.Linq;
     using MoverSoft.Common.Extensions;
-
+    using Newtonsoft.Json;
     public abstract class TableRecord
     {
         public TableRecord()
@@ -22,7 +22,7 @@ namespace MoverSoft.StorageLibrary.Entities
                 {
                     foreach (var property in sourceType.GetProperties())
                     {
-                        var attrributes = property.GetCustomAttributes(typeof(RowAttribute), true);
+                        var attrributes = property.GetCustomAttributes(typeof(TableColumnAttribute), true);
                         if (attrributes.Any())
                         {
                             var value = property.GetValue(source, property.GetIndexParameters());
@@ -33,15 +33,20 @@ namespace MoverSoft.StorageLibrary.Entities
             }
         }
 
+        [JsonIgnore]
         public abstract string PartitionKey { get; }
 
+        [JsonIgnore]
         public abstract string RowKey { get; }
 
+        [JsonIgnore]
         public virtual string EntityTag { get; set; }
 
-        [Row]
+        [TableColumn]
+        [JsonIgnore]
         public DateTime CreatedTime { get; set; }
 
+        [JsonIgnore]
         public virtual TableRecord[] Indexes
         {
             get { return this.AsArray(); }

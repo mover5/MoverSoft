@@ -68,7 +68,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Entities\RowAttribute.cs" />
+    <Compile Include="Entities\TableColumnAttribute.cs" />
     <Compile Include="Entities\SegmentedResult.cs" />
     <Compile Include="Entities\TableRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

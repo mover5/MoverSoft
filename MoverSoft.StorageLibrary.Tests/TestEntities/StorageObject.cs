@@ -5,25 +5,25 @@ namespace MoverSoft.StorageLibrary.Tests.TestEntities
 
     public class StorageObject : TableRecord
     {
-        [Row]
+        [TableColumn]
         public JsonClass ClassTest { get; set; }
 
-        [Row]
+        [TableColumn]
         public string TenantId { get; set; }
 
-        [Row]
+        [TableColumn]
         public string ObjectId { get; set; }
 
-        [Row]
+        [TableColumn]
         public string Name { get; set; }
 
-        [Row]
+        [TableColumn]
         public int Count { get; set; }
 
-        [Row]
+        [TableColumn]
         public StorageEnum EnumValue { get; set; }
 
-        [Row]
+        [TableColumn]
         public string[] ArrayTest { get; set; }
 
         public string NotSaved { get; set; }

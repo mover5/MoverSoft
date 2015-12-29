@@ -10,13 +10,13 @@
 
         public IndexedObject(IndexedObject source) : base(source) { }
 
-        [Row]
+        [TableColumn]
         public string TenantId { get; set; }
 
-        [Row]
+        [TableColumn]
         public string Name { get; set; }
 
-        [Row]
+        [TableColumn]
         public string Address { get; set; }
 
         public override string PartitionKey

@@ -47,6 +47,15 @@
             return segmentedResult.Results;
         }
 
+        public async Task<T[]> FindRangeByRowKeyQuery<T>(string partitionKey, string rowKeyQuery, int? top = null) where T : TableRecord, new()
+        {
+            var segmentedResult = await this
+                .FindRangeByRowKeyQuerySegmented<T>(partitionKey: partitionKey, rowKeyQuery: rowKeyQuery, top: top)
+                .ConfigureAwait(continueOnCapturedContext: false);
+
+            return segmentedResult.Results;
+        }
+
         public async Task<T[]> FindRange<T>(string partitionKey, string rowKeyPrefix, int? top = null) where T : TableRecord, new()
         {
             var segmentedResult = await this
@@ -131,6 +140,13 @@
             var rowPrefixQuery = TableStorageUtilities.GetRowKeyPrefixRangeFilter(partitionKey, rowKeyPrefix);
 
             return this.FindRangeSegmentedInternal<T>(rowPrefixQuery, top, token);
+        }
+
+        public Task<SegmentedResult<T>> FindRangeByRowKeyQuerySegmented<T>(string partitionKey, string rowKeyQuery, int? top = null, TableContinuationToken token = null) where T : TableRecord, new()
+        {
+            var query = TableStorageUtilities.GetRowKeyQuery(partitionKey, rowKeyQuery);
+
+            return this.FindRangeSegmentedInternal<T>(query, top, token);
         }
 
         private async Task<SegmentedResult<T>> FindRangeSegmentedInternal<T>(string query, int? top = null, TableContinuationToken token = null) where T : TableRecord, new()

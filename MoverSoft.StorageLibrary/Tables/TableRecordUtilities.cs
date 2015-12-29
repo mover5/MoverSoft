@@ -20,7 +20,7 @@
             var thisType = tableRecord.GetType();
             foreach (var property in thisType.GetProperties())
             {
-                var attrributes = property.GetCustomAttributes(typeof(RowAttribute), true);
+                var attrributes = property.GetCustomAttributes(typeof(TableColumnAttribute), true);
                 if (attrributes.Any())
                 {
                     EntityProperty entityProperty;
@@ -48,7 +48,7 @@
             var thisType = tableRecord.GetType();
             foreach (var property in thisType.GetProperties())
             {
-                var attrributes = property.GetCustomAttributes(typeof(RowAttribute), true);
+                var attrributes = property.GetCustomAttributes(typeof(TableColumnAttribute), true);
                 if (attrributes.Any())
                 {
                     entity[property.Name] = TableRecordUtilities.GetEntityProperty(tableRecord, property);

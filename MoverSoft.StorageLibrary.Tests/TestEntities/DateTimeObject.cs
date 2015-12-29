@@ -8,13 +8,13 @@ namespace MoverSoft.StorageLibrary.Tests.TestEntities
 
     public class DateTimeObject : TableRecord
     {
-        [Row]
+        [TableColumn]
         public string TenantId { get; set; }
 
-        [Row]
+        [TableColumn]
         public string ObjectId { get; set; }
 
-        [Row]
+        [TableColumn]
         public DateTime TheTime { get; set; }
 
         public override string PartitionKey
