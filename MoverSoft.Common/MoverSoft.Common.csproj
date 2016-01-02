@@ -59,6 +59,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\ConfigurationManager.cs" />
+    <Compile Include="Data\HttpClientDataProvider.cs" />
+    <Compile Include="Data\HttpClientResponseMessage.cs" />
     <Compile Include="Extensions\CertificateExtensions.cs" />
     <Compile Include="Extensions\ClassExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
