@@ -10,7 +10,7 @@
 
     public class HttpClientDataProvider
     {
-        protected HttpClient httpClient { get; set; }
+        private HttpClient httpClient { get; set; }
 
         public HttpClientDataProvider(string rootDomain)
         {
@@ -21,6 +21,11 @@
 
             this.httpClient = new HttpClient();
             this.httpClient.BaseAddress = new Uri(rootDomain);
+        }
+
+        protected Task<HttpClientResponseMessage<T>> SendRequest<T>(string authToken, string relativeUri, HttpMethod method)
+        {
+            return this.SendRequest<T, object>(authToken, relativeUri, method);
         }
 
         protected async Task<HttpClientResponseMessage<T>> SendRequest<T, U>(string authToken, string relativeUri, HttpMethod method, U body = null) where U : class        {
@@ -52,10 +57,7 @@
                     clientResponse.Value = default(T);
                     clientResponse.Error = new JObject
                     {
-                        "Error",
-                        {
-                            "Response did not deserialize correctly"
-                        }
+                        "Error", "Response did not deserialize correctly"
                     };
                 }
             }
