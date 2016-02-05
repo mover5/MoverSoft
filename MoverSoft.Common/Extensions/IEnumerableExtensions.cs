@@ -35,5 +35,19 @@
         {
             return source.Distinct(comparer).ToArray();
         }
+
+        public static T[][] BatchEnumerable<T>(this IEnumerable<T> source, int batchSize)
+        {
+            var result = new List<T[]>();
+            var batchCount = Math.Ceiling((double)source.CoalesceEnumerable().Count() / (double)batchSize);
+
+            for (var batchIndex = 0; batchIndex < batchCount; batchIndex++)
+            {
+                var skip = batchIndex * batchSize;
+                result.Add(source.Skip(skip).Take(batchSize).ToArray());
+            }
+
+            return result.ToArray();
+        }
     }
 }
