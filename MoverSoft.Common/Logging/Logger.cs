@@ -42,12 +42,12 @@ namespace MoverSoft.Common.Logging
                 {
                     if (disposable != null)
                     {
-                        disposable.Dispose();
-
                         if (disposable.GetType() == typeof(StreamWriter))
                         {
                             ((StreamWriter)disposable).Close();
                         }
+
+                        disposable.Dispose();
                     }
                 }
             }
