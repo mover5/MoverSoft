@@ -6,6 +6,12 @@ namespace MoverSoft.Common.Caches
 {
     public class AsyncPassThroughCache<TValue> where TValue : class
     {
+        protected class CacheItem<TCacheValue>
+        {
+            public TCacheValue Value { get; set; }
+            public DateTime? ExpirationTime { get; set; }
+        }
+
         private InsensitiveDictionary<CacheItem<TValue>> CacheData { get; set; }
 
         public AsyncPassThroughCache()
@@ -43,7 +49,7 @@ namespace MoverSoft.Common.Caches
 
                 if (cacheItemExpiry.HasValue)
                 {
-                    data.Expiry = DateTime.UtcNow.Add(cacheItemExpiry.Value);
+                    data.ExpirationTime = DateTime.UtcNow.Add(cacheItemExpiry.Value);
                 }
 
                 this.CacheData[cacheKey] = data;
@@ -57,7 +63,7 @@ namespace MoverSoft.Common.Caches
                 var valueObject = this.CacheData[cacheKey];
 
                 // If the value is expired, remove it from the cache and return null
-                if (valueObject.Expiry.HasValue && valueObject.Expiry.Value < DateTime.UtcNow)
+                if (valueObject.ExpirationTime.HasValue && valueObject.ExpirationTime.Value < DateTime.UtcNow)
                 {
                     this.RemoveValue(cacheKey);
                     return null;
