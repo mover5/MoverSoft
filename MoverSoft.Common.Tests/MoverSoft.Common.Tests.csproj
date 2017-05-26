@@ -50,6 +50,8 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="LRUAsyncPassthroughCacheTests.cs" />
+    <Compile Include="AsyncPassthroughCacheTests.cs" />
     <Compile Include="IEnumerableExtensionsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

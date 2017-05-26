@@ -58,6 +58,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Caches\LRUAsyncPassthroughCache.cs" />
+    <Compile Include="Caches\AsyncPassthroughCache.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Data\HttpClientDataProvider.cs" />
     <Compile Include="Data\HttpClientResponseMessage.cs" />
