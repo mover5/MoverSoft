@@ -1,68 +1,83 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MoverSoft.Common.Extensions;
-using MoverSoft.Common.Caches;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MoverSoft.Common.Caches;
 
 namespace MoverSoft.Common.Tests
 {
     [TestClass]
-    public class AsyncPassthroughCacheTests
+    public class AsyncPassThroughCacheTests
     {
         [TestMethod]
-        public async Task TestCache()
+        public void BasicGetSet()
         {
-            var cache = new AsyncPassthroughCache<string>();
+            var cache = new AsyncPassThroughCache<string>();
+            Assert.IsNull(cache.GetValue("testKey1"));
+            cache.SetValue("testKey1", "testValue1");
+            Assert.AreEqual("testValue1", cache.GetValue("testKey1"));
+            Assert.AreEqual("testValue1", cache.GetValue("testKEY1"));
+        }
 
-            var result = cache.GetItem("key1");
-            Assert.IsNull(result);
+        [TestMethod]
+        public void PopValues()
+        {
+            var cache = new AsyncPassThroughCache<string>();
+            cache.SetValue("testKey1", "value1");
+            cache.SetValue("testKey2", "value2");
+            Assert.AreEqual("value2", cache.PopValue("testKey2"));
+            Assert.IsNull(cache.GetValue("testKey2"));
+            Assert.IsNull(cache.GetValue("testKey3"));
+        }
 
-            cache.AddItem("key1", "value1");
-            result = cache.GetItem("key1");
-            Assert.AreEqual("value1", result);
+        [TestMethod]
+        public void PassthroughGetValue()
+        {
+            var cache = new AsyncPassThroughCache<string>();
 
-            result = cache.RemoveItem("key1");
-            Assert.AreEqual("value1", result);
-
-            result = cache.GetItem("key1");
-            Assert.IsNull(result);
-
-            cache.AddItem("key1", "value1");
-            result = cache.GetItem("key2");
-            Assert.IsNull(result);
-
-            var asyncMethodCalled = false;
-            result = await cache.GetItem(
-                key: "key2",
+            var factoryCalled = false;
+            var value = cache.GetValue(
+                cacheKey: "key1",
                 valueFactory: () =>
                 {
-                    asyncMethodCalled = true;
-                    return Task.FromResult("value2");
+                    factoryCalled = true;
+                    return "value1";
                 });
-            Assert.AreEqual("value2", result);
-            Assert.IsTrue(asyncMethodCalled);
 
-            asyncMethodCalled = false;
-            result = await cache.GetItem(
-                key: "key2",
+            Assert.AreEqual("value1", value);
+            Assert.IsTrue(factoryCalled);
+
+            factoryCalled = false;
+            value = cache.GetValue(
+                cacheKey: "key1",
                 valueFactory: () =>
                 {
-                    asyncMethodCalled = true;
-                    return Task.FromResult("value2");
+                    factoryCalled = true;
+                    return "value1";
                 });
-            Assert.AreEqual("value2", result);
-            Assert.IsFalse(asyncMethodCalled);
 
-            cache.AddItem("key3", "value3", TimeSpan.FromMilliseconds(100));
-            result = cache.GetItem("key3");
-            Assert.AreEqual("value3", result);
+            Assert.AreEqual("value1", value);
+            Assert.IsFalse(factoryCalled);
+        }
 
-            await Task.Delay(100);
+        [TestMethod]
+        public async Task PassThroughValueExpiry()
+        {
+            var cache = new AsyncPassThroughCache<string>();
 
-            result = cache.GetItem("key3");
-            Assert.IsNull(result);
+            var value = cache.GetValue(
+                cacheKey: "key1",
+                cacheItemExpiry: TimeSpan.FromSeconds(2),
+                valueFactory: () => "value1");
+
+            Assert.AreEqual("value1", value);
+            Assert.AreEqual("value1", cache.GetValue("key1"));
+
+            await Task.Delay(TimeSpan.FromSeconds(2));
+
+            Assert.IsNull(cache.GetValue("key1"));
         }
     }
 }

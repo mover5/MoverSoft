@@ -4,82 +4,118 @@ using MoverSoft.Common.Utilities;
 
 namespace MoverSoft.Common.Caches
 {
-    public class AsyncPassthroughCache<T> where T : class
+    public class AsyncPassThroughCache<TValue> where TValue : class
     {
-        protected class CacheRecord<TCacheValue>
+        protected class CacheItem<TCacheValue>
         {
             public TCacheValue Value { get; set; }
             public DateTime? ExpirationTime { get; set; }
         }
 
-        protected InsensitiveDictionary<CacheRecord<T>> Cache { get; set; }
+        private InsensitiveDictionary<CacheItem<TValue>> CacheData { get; set; }
 
-        public AsyncPassthroughCache()
+        public AsyncPassThroughCache()
         {
-            this.Cache = new InsensitiveDictionary<CacheRecord<T>>();
+            this.CacheData = new InsensitiveDictionary<CacheItem<TValue>>();
         }
 
-        public int CacheSize()
+        public TValue PopValue(string cacheKey)
         {
-            return this.Cache.Count;
+            var value = this.GetValue(cacheKey);
+            this.RemoveValue(cacheKey);
+
+            return value;
         }
 
-        public virtual void AddItem(string key, T item, TimeSpan? expiration = null)
+        public void RemoveValue(string cacheKey)
         {
-            DateTime? expirationTime = expiration.HasValue ? (DateTime?)DateTime.UtcNow.Add(expiration.Value) : null;
-            var cacheItem = new CacheRecord<T>
+            if (this.CacheData.ContainsKey(cacheKey))
             {
-                Value = item,
-                ExpirationTime = expirationTime
-            };
-
-            if (this.Cache.ContainsKey(key))
-            {
-                this.Cache.Remove(key);
+                this.CacheData.Remove(cacheKey);
             }
-
-            this.Cache.Add(key, cacheItem);
         }
 
-        public virtual T RemoveItem(string key)
+        public void SetValue(
+            string cacheKey, 
+            TValue value, 
+            TimeSpan? cacheItemExpiry = null)
         {
-            if (this.Cache.ContainsKey(key))
+            if (value != null)
             {
-                var value = this.Cache[key];
-                this.Cache.Remove(key);
-
-                return value.Value;
-            }
-
-            return null;
-        }
-
-        public virtual T GetItem(string key)
-        {
-            if (this.Cache.ContainsKey(key))
-            {
-                var cacheItem = this.Cache[key];
-
-                if (cacheItem.ExpirationTime.HasValue && cacheItem.ExpirationTime < DateTime.UtcNow)
+                var data = new CacheItem<TValue>
                 {
-                    this.RemoveItem(key);
+                    Value = value
+                };
+
+                if (cacheItemExpiry.HasValue)
+                {
+                    data.ExpirationTime = DateTime.UtcNow.Add(cacheItemExpiry.Value);
+                }
+
+                this.CacheData[cacheKey] = data;
+            }
+        }
+
+        public TValue GetValue(string cacheKey)
+        {
+            if (this.CacheData.ContainsKey(cacheKey))
+            {
+                var valueObject = this.CacheData[cacheKey];
+
+                // If the value is expired, remove it from the cache and return null
+                if (valueObject.ExpirationTime.HasValue && valueObject.ExpirationTime.Value < DateTime.UtcNow)
+                {
+                    this.RemoveValue(cacheKey);
                     return null;
                 }
 
-                return cacheItem.Value;
+                return valueObject.Value;
             }
 
             return null;
         }
 
-        public virtual async Task<T> GetItem(string key, Func<Task<T>> valueFactory, TimeSpan? expiration = null)
+        public TValue GetValue(
+            string cacheKey, 
+            Func<TValue> valueFactory = null, 
+            TimeSpan? cacheItemExpiry = null)
         {
-            var value = this.GetItem(key);
+            var value = this.GetValue(cacheKey);
 
-            if (value == null)
+            if (value == null && valueFactory != null)
+            {
+                value = valueFactory();
+
+                if (value != null)
+                {
+                    this.SetValue(
+                        cacheKey: cacheKey,
+                        value: value,
+                        cacheItemExpiry: cacheItemExpiry);
+                }
+            }
+
+            return value;
+        }
+
+        public async Task<TValue> GetValue(
+            string cacheKey, 
+            Func<Task<TValue>> valueFactory = null, 
+            TimeSpan? cacheItemExpiry = null)
+        {
+            var value = this.GetValue(cacheKey);
+
+            if (value == null && valueFactory != null)
             {
                 value = await valueFactory();
-                this.AddItem(key, value, expiration);
+
+                if (value != null)
+                {
+                    this.SetValue(
+                        cacheKey: cacheKey,
+                        value: value,
+                        cacheItemExpiry: cacheItemExpiry);
+                }
             }
 
             return value;
