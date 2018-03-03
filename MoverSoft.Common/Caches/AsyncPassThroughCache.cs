@@ -1,9 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
-using MoverSoft.Common.Utilities;
-
-namespace MoverSoft.Common.Caches
+﻿namespace MoverSoft.Common.Caches
 {
+    using System;
+    using System.Threading.Tasks;
+    using MoverSoft.Common.Definitions;
+
     public class AsyncPassThroughCache<TValue> where TValue : class
     {
         protected class CacheItem<TCacheValue>

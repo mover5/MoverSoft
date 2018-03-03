@@ -1,7 +1,8 @@
-﻿namespace MoverSoft.Common.Utilities
+﻿namespace MoverSoft.Web.Utilities
 {
     using System;
-    using MoverSoft.Common.Extensions;
+    using MoverSoft.Common.Definitions;
+    using MoverSoft.Web.Extensions;
 
     public class QueryStringReader
     {

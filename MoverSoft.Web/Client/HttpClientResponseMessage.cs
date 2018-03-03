@@ -1,4 +1,4 @@
-﻿namespace MoverSoft.Common.Data
+﻿namespace MoverSoft.Web.Client
 {
     using System.Net;
     using Newtonsoft.Json.Linq;

@@ -4,7 +4,7 @@
     using System.Linq;
     using SystemConfigManager = System.Configuration;
     using MoverSoft.Common.Extensions;
-    using Utilities;
+    using MoverSoft.Common.Utilities;
 
     public static class ConfigurationManager
     {

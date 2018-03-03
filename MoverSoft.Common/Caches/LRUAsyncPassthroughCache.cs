@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MoverSoft.Common.Extensions;
-using MoverSoft.Common.Utilities;
-
-namespace MoverSoft.Common.Caches
+﻿namespace MoverSoft.Common.Caches
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using MoverSoft.Common.Definitions;
+
     public class LRUAsyncPassthroughCache<T> where T : class
     {
         protected class CacheRecord<TCacheValue>

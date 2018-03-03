@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web.Http;
-
-namespace MoverSoft.Common.Web
+﻿namespace MoverSoft.Web.Extensions
 {
+    using System;
+    using System.Collections;
+    using System.Net;
+    using System.Net.Http;
+    using System.Web.Http;
+    using MoverSoft.Web.Definitions;
+
     public static class HttpRequestMessageExtensions
     {
         public static HttpResponseMessage CreateResponse<T>(

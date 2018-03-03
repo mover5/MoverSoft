@@ -1,8 +1,9 @@
-﻿namespace MoverSoft.Common.Extensions
+﻿namespace MoverSoft.Web.Extensions
 {
     using System;
     using System.Linq;
-    using MoverSoft.Common.Utilities;
+    using MoverSoft.Common.Definitions;
+    using MoverSoft.Common.Extensions;
 
     public static class UriExtensions
     {

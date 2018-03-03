@@ -1,4 +1,4 @@
-﻿namespace MoverSoft.Common.Data
+﻿namespace MoverSoft.Web.Client
 {
     using System;
     using System.Net.Http;
@@ -6,6 +6,7 @@
     using System.Text;
     using System.Threading.Tasks;
     using MoverSoft.Common.Extensions;
+    using MoverSoft.Web.Utilities;
     using Newtonsoft.Json.Linq;
 
     public class HttpClientDataProvider
@@ -49,7 +50,7 @@
                 try
                 {
                     clientResponse.Value = await response.Content
-                        .ReadAsAsync<T>(JsonExtensions.JsonMediaTypeFormatters)
+                        .ReadAsAsync<T>(JsonMediaTypes.JsonMediaTypeFormatters)
                         .ConfigureAwait(continueOnCapturedContext: false);
                 }
                 catch (Exception)
@@ -64,7 +65,7 @@
             else
             {
                 clientResponse.Error = await response.Content
-                    .ReadAsAsync<JToken>(JsonExtensions.JsonMediaTypeFormatters)
+                    .ReadAsAsync<JToken>(JsonMediaTypes.JsonMediaTypeFormatters)
                     .ConfigureAwait(continueOnCapturedContext: false);
             }
 

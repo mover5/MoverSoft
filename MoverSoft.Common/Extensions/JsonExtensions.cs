@@ -1,10 +1,8 @@
-﻿
-namespace MoverSoft.Common.Extensions
+﻿namespace MoverSoft.Common.Extensions
 {
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.Net.Http.Formatting;
     using System.Xml;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
@@ -59,14 +57,6 @@ namespace MoverSoft.Common.Extensions
         public static readonly JsonSerializer JsonObjectTypeSerializer = JsonSerializer.Create(JsonExtensions.ObjectSerializationSettings);
 
         public static readonly JsonSerializer JsonMediaTypeSerializer = JsonSerializer.Create(JsonExtensions.MediaTypeFormatterSettings);
-
-        public static readonly MediaTypeFormatter JsonObjectTypeFormatter = new JsonMediaTypeFormatter { SerializerSettings = JsonExtensions.ObjectSerializationSettings, UseDataContractJsonSerializer = false };
-
-        public static readonly MediaTypeFormatter[] JsonObjectTypeFormatters = new MediaTypeFormatter[] { JsonExtensions.JsonObjectTypeFormatter };
-
-        public static readonly MediaTypeFormatter JsonMediaTypeFormatter = new JsonMediaTypeFormatter { SerializerSettings = JsonExtensions.MediaTypeFormatterSettings, UseDataContractJsonSerializer = false };
-
-        public static readonly MediaTypeFormatter[] JsonMediaTypeFormatters = new MediaTypeFormatter[] { JsonExtensions.JsonMediaTypeFormatter };
 
         public static string ToJson(this object obj)
         {

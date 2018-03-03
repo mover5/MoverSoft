@@ -4,13 +4,13 @@
     <id>$id$</id>
     <version>$version$</version>
     <title>$title$</title>
-    <authors>$author$</authors>
-    <owners>$author$</owners>
+    <authors>Mark Overholt</authors>
+    <owners>Mark Overholt</owners>
     <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
     <projectUrl>https://github.com/mover5/MoverSoft</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <copyright>Copyright 2018</copyright>
-    <tags>DOTNET Utilities Azure Storage Tables Indexes</tags>
+    <tags>DOTNET Utilities Web HTTP REST</tags>
   </metadata>
 </package>

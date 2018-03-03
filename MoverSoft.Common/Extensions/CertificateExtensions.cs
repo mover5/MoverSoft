@@ -1,11 +1,9 @@
-﻿
-
-namespace MoverSoft.Common.Extensions
+﻿namespace MoverSoft.Common.Extensions
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Linq;
     using System.Security.Cryptography.X509Certificates;
+
     /// <summary>
     /// Extension methods to find extensions in the certificate store
     /// </summary>
